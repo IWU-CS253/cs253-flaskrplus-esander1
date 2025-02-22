@@ -1,5 +1,17 @@
 {% extends "layout.html" %}
 {% block body %}
+<!-- Drop down category filter -->
+    <form action="{{ url_for('show_entries') }}" method="get" class="filter-by-category">
+    <label for="category">Filter by Category</label>
+    <select name="category" id="category">
+        <option value="">All Categories</option>
+        {% for category in categories %}
+            <option value="{{ category[0] }}">{{ category[0] }}</option>
+        {% endfor %}
+    </select>
+    <input type="submit" value="Filter">
+    </form>
+
   <form action="{{ url_for('add_entry') }}" method="post" class="add-entry">
     <dl>
       <dt>Title:
