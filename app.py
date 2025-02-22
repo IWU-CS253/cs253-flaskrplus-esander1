@@ -70,9 +70,9 @@ def show_entries():
     category = request.args.get('category')
 
     if category:
-        cur = db.execute('select title, text, category from entries where category = ? order by id desc', [category])
+        cur = db.execute('select id, title, text, category from entries where category = ? order by id desc', [category])
     else:
-        cur = db.execute('select title, text, category from entries order by id desc')
+        cur = db.execute('select id, title, text, category from entries order by id desc')
 
     entries = cur.fetchall()
 
@@ -88,4 +88,12 @@ def add_entry():
                [request.form['title'], request.form['text'], request.form['category']])
     db.commit()
     flash('New entry was successfully posted')
+    return redirect(url_for('show_entries'))
+
+@app.route('/delete/<int:entry_id>', methods=['POST'])
+def delete_entry(entry_id):
+    db = get_db()
+    db.execute('delete from entries where id = ?', [entry_id])
+    db.commit()
+    flash('Entry was successfully deleted')
     return redirect(url_for('show_entries'))
