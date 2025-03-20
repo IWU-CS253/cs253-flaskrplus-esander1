@@ -97,3 +97,30 @@ def delete_entry(entry_id):
     db.commit()
     flash('Entry was successfully deleted')
     return redirect(url_for('show_entries'))
+
+
+@app.route('/edit/<int:entry_id>', methods=['GET', 'POST'])
+def edit_entry(entry_id):
+    db = get_db()
+    cur = db.execute('SELECT id, title, text, category FROM entries WHERE id = ?', [entry_id])
+    entry = cur.fetchone()
+
+    if entry is None:
+        flash('Post not found.')
+        return redirect(url_for('show_entries'))
+
+    if request.method == 'POST':
+        title = request.form.get('title')
+        text = request.form.get('text')
+        category = request.form.get('category')
+
+        if title and text and category:
+            db.execute('UPDATE entries SET title = ?, text = ?, category = ? WHERE id = ?',
+                       [title, text, category, entry_id])
+            db.commit()
+            flash('Updated post successfully')
+            return redirect(url_for('show_entries'))
+        else:
+            flash('All fields are required')
+
+    return render_template('edit_entries.html', entry=entry)
