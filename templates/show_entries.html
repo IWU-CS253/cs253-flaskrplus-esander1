@@ -1,17 +1,26 @@
 {% extends "layout.html" %}
 {% block body %}
 <!-- Drop down category filter -->
-    <form action="{{ url_for('show_entries') }}" method="get" class="filter-by-category">
-    <label for="category">Filter by Category</label>
-    <select name="category" id="category">
-        <option value="">All Categories</option>
-        {% for category in categories %}
-            <option value="{{ category[0] }}">{{ category[0] }}</option>
-        {% endfor %}
-    </select>
-    <input type="submit" value="Filter">
-    </form>
+<div class="container my-4">
+    <form action="{{ url_for('show_entries') }}" method="get" class="row g-3 align-items-center">
+        <label for="category" class="form-label col-auto">Filter by Category</label>
+        <div class="col-auto">
+            <select name="category" id="category" class="form-select">
+                <option value="">All Categories</option>
+                {% for category in categories %}
+                    <option value="{{ category[0] }}">{{ category[0] }}</option>
+                {% endfor %}
+            </select>
+        </div>
 
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary">Filter</button>
+        </div>
+    </form>
+</div>
+
+<!-- Add entry form -->
+<div class="container my-4 p-4 border bg-light rounded">
   <form action="{{ url_for('add_entry') }}" method="post" class="add-entry">
     <dl>
       <dt>Title:
@@ -23,19 +32,35 @@
       <dd><input type="submit" value="Share">
     </dl>
   </form>
-  <ul class="entries">
-  {% for entry in entries %}
-    <li>
-        <h2>{{ entry.title }}</h2>
-        <p>Category: {{ entry.category }}</p>
-        {{ entry.text|safe }}
+</div>
 
-        <form action="{{ url_for('delete_entry', entry_id=entry.id) }}" method="post">
-            <input type="submit" value="Delete Post">
-        </form>
-    </li>
-  {% else %}
-    <li><em>Unbelievable.  No entries here so far</em></li>
-  {% endfor %}
-  </ul>
+<!-- entries section -->
+<div class="container my-4">
+    <ul class="list-unstyled">
+        {% for entry in entries %}
+            <li class="mb-4 p-4 border rounded bg-white">
+                <div class="row align-items-center">
+                    <div class="col-lg-3">
+                        <h2 class="fs-2 text-primary">{{ entry.title }}</h2>
+                    </div>
+
+                    <div class="col-lg-3">
+                        <span class="badge bg-info text-dark ">{{ entry.category }}</span>
+                    </div>
+
+                    <div class="col-lg-3">
+                        <form action="{{ url_for('delete_entry', entry_id=entry.id) }}" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                        </form>
+                    </div>
+                </div>
+
+                <p class="mb-0">{{ entry.text|safe }}</p>
+            </li>
+        {% else %}
+            <li class="text-muted text-center"><em>Unbelievable. No entries here so far</em></li>
+        {% endfor %}
+    </ul>
+</div>
+
 {% endblock %}
