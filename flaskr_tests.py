@@ -31,5 +31,52 @@ class FlaskrTestCase(unittest.TestCase):
         assert b'<strong>HTML</strong> allowed here' in rv.data
         assert b'A category' in rv.data
 
+    def test_add_entry(self):
+        rv = self.app.post('/add', data=dict(
+            title='test title',
+            text='test text',
+            category='test category'
+        ), follow_redirects=True)
+        assert b'test title' in rv.data
+        assert b'test text' in rv.data
+        assert b'test category' in rv.data
+
+    def test_delete_entry(self):
+        self.app.post('/add', data=dict(
+            title='entry to delete',
+            text='this text should be removed',
+            category='delete category'
+        ), follow_redirects=True)
+        rv = self.app.get('/')
+        assert b'entry to delete' in rv.data
+
+        with flaskr.app.app_context():
+            db = flaskr.get_db()
+            cur = db.execute('SELECT id FROM entries WHERE title = ?', ('entry to delete',))
+            entry_id = cur.fetchone()['id']
+
+        self.app.post(f'/delete/{entry_id}', follow_redirects=True)
+        rv = self.app.get('/')
+        assert b'entry to delete' not in rv.data
+
+    def test_filter_by_category(self):
+        self.app.post('/add', data=dict(
+            title='category test 1',
+            text='this is category A',
+            category='A'
+        ), follow_redirects=True)
+        self.app.post('/add', data=dict(
+            title='category test 2',
+            text='this is category B',
+            category='B'
+        ), follow_redirects=True)
+
+        rv = self.app.get('/?category=A')
+        assert b'category test 1' in rv.data
+        assert b'category test 2' not in rv.data
+
+        rv = self.app.get('/?category=B')
+        assert b'category test 1' not in rv.data
+        assert b'category test 2' in rv.data
 if __name__ == '__main__':
     unittest.main()
