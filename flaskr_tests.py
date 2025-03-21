@@ -78,5 +78,63 @@ class FlaskrTestCase(unittest.TestCase):
         rv = self.app.get('/?category=B')
         assert b'category test 1' not in rv.data
         assert b'category test 2' in rv.data
+
+    def test_edit_post(self):
+        self.app.post('/add', data=dict(
+            title='old title',
+            text='old text',
+            category='old category'
+        ), follow_redirects=True)
+
+        with flaskr.app.app_context():
+            db = flaskr.get_db()
+            cur = db.execute('SELECT id FROM entries WHERE title = ?', ('old title',))
+            entry_id = cur.fetchone()['id']
+
+        rv = self.app.post(f'/edit/{entry_id}', data=dict(
+            title='new title',
+            text='new text',
+            category='new category'
+        ), follow_redirects=True)
+
+        assert b'new title' in rv.data
+        assert b'new text' in rv.data
+        assert b'new category' in rv.data
+        assert b'old title' not in rv.data
+        assert b'old text' not in rv.data
+        assert b'old category' not in rv.data
+
+    def test_edit_non_existent_post(self):
+        rv = self.app.post('/edit/9999', data=dict(
+            title='doesnt exist',
+            text='none existent',
+            category='none'
+        ), follow_redirects=True)
+
+        assert b'Post not found' in rv.data
+
+    def test_edit_with_missing_fields(self):
+        self.app.post('/add', data=dict(
+            title='edit this',
+            text='this too',
+            category='also this'
+        ), follow_redirects=True)
+
+        with flaskr.app.app_context():
+            db = flaskr.get_db()
+            cur = db.execute('SELECT id FROM entries WHERE title = ?', ('edit this',))
+            entry_id = cur.fetchone()['id']
+
+        rv = self.app.post(f'/edit/{entry_id}', data=dict(
+            title='',
+            text='not blank',
+            category='blank title'
+        ), follow_redirects=True)
+
+        assert b'All fields are required' in rv.data
+        rv = self.app.get('/')
+        assert b'edit this' in rv.data
+        assert b'blank title' not in rv.data
+
 if __name__ == '__main__':
     unittest.main()
